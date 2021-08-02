@@ -1,28 +1,33 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 
 import axios from "axios";
 import { useHistory } from "react-router-dom";
+import { CircularProgress } from "@material-ui/core";
 
 import Display from "./Display";
+import { UserContext } from "../UserContext";
 
 function Input() {
+  const {user,token} = useContext(UserContext);
   const history = useHistory();
-  
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
-
   const [images, setImages] = useState([]);
-  
   const [pageIndex, setPageIndex] = useState(0);
+  const [loading, setLoading] = useState(false)
+  console.log(user)
+  console.log(token)
+  
 
-  const Search = () => {
-    const API_URL = "http://127.0.0.1:8000/test/search/";
+  const Search = async () => {
+    const API_URL = "http://127.0.0.1:8000/api/search/";
     console.log(latitude, longitude);
     console.log(pageIndex)
-    axios
+    await axios
       .get(API_URL, {
-        params: {latitude:latitude, longitude: longitude, page: pageIndex+1}
-      })
+        params: {latitude:latitude, longitude: longitude, page: pageIndex+1},
+        headers : {Authorization : "token "+token}
+      },)
       .then(function (response) {
         setImages(response.data.photos.photo);
       })
@@ -33,6 +38,7 @@ function Input() {
 
   const onSubmit = async (event) => {
     event.preventDefault(); // Prevent default submission
+    setLoading(true)
     try {
       await Search();
       displayImages();
@@ -54,47 +60,61 @@ function Input() {
   const handleLatitudeChange = (event) => {
       setLatitude(event.target.value);
   };
+
   const handleLongitudeChange = (event) => {
       setLongitude(event.target.value);
   };
   
   const displayImages = () => {
+    console.log(images);
     return (
       <React.Fragment>
-        {images.length > 0 && (
-          <>
-            <Display results={images}/>
-            <div className="container center " style={{padding: "0, 10px"}}>
-              {pageIndex != 0 ? (
-                <button
-                  className="btn waves-effect waves-light"
-                  onClick={prevPage}
-                  
-                >
-                  Prev
-                </button>
+        <div className="">
+          {images.length > 0 ? (
+            <>
+              <Display results={images} />
+              <div className="container center">
+                <br/>
+                {pageIndex != 0 ? (
+                  <button
+                    className="btn waves-effect waves-light"
+                    onClick={prevPage}
+                  >
+                    Prev
+                  </button>
+                ) : (
+                  <></>
+                )}
+
+                {
+                  <button
+                    className="btn waves-effect waves-light"
+                    onClick={nextPage}
+                  >
+                    Next
+                  </button>
+                }
+              </div>
+            </>
+          ) : (
+            <>
+              {loading ? (
+                <>
+                  {" "}
+                  <div className="container center">
+                    <CircularProgress loading color="secondary" />
+                  </div>
+                </>
               ) : (
                 <></>
               )}
-
-              {
-                <button
-                  className="btn waves-effect waves-light"
-                  onClick={nextPage}
-                >
-                  Next
-                </button>
-              }
-
-              {/* <button onClick = {prevPage}>Prev</button>
-         <button className = "btn waves-effect waves-light" onClick = {nextPage}>next</button> */}
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </React.Fragment>
     );
   };
-
+  
   useEffect(() => {
     if (pageIndex) {
     Search()
@@ -134,6 +154,7 @@ function Input() {
           </button>
         </div>
       </form>
+      <br></br>
       <div>{displayImages()}</div>
       <br/>
     </div>

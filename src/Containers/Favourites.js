@@ -1,17 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 
 import { useHistory } from "react-router-dom";
 import axios from "axios";
+import { UserContext } from "../UserContext";
 
 
 function Favourites() {
+  const {user, token} = useContext(UserContext)
   const history = useHistory();
   const [favouriteItems, setFavouriteItems] = useState([]);
 
   const loadFavouries = () => {
-    const API_URL = "http://127.0.0.1:8000/test/listfavourites/";
+    const API_URL = "http://127.0.0.1:8000/api/listfavourites/";
     axios
-      .get(API_URL)
+      .get(API_URL, {
+        params : {user : user},
+        headers : {Authorization : "token "+token}})
       .then((response) => {
         console.log(response);
         setFavouriteItems(response.data.results);

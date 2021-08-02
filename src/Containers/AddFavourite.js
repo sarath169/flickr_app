@@ -1,7 +1,9 @@
-import React, {useState} from "react";
+import React, {useContext, useState} from "react";
 import axios from "axios";
+import { UserContext } from "../UserContext";
 
 function AddLocation() {
+  const {user, token} = useContext(UserContext)
   const [values, setValues] = useState({
     latitude: '', longitude: '', location_name: ''
   });
@@ -12,9 +14,9 @@ function AddLocation() {
     }
   };
   const AddNewLocation = () => {
-    const url = "http://127.0.0.1:8000/test/addlocation/";
+    const url = "http://127.0.0.1:8000/api/addlocation/";
     axios
-      .post(url, values)
+      .post(url, values , {headers : {Authorization : "token "+token}})
       .then(function (response) {
         console.log(response);
       })
@@ -67,21 +69,3 @@ function AddLocation() {
 }
 
 export default AddLocation;
-
-
-
-
-const addToFavourite = () => {
-    const url = "http://127.0.0.1:8000/test/addfavourite/";
-    axios
-      .post(url, {
-        location: "",
-        image_src: "Flintstone",
-      })
-      .then(function (response) {
-        console.log(response);
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
-  };

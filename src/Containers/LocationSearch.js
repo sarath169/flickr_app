@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 
 import axios from "axios";
 import { makeStyles } from "@material-ui/core/styles";
@@ -6,14 +6,21 @@ import InputLabel from "@material-ui/core/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem";
 import FormControl from "@material-ui/core/FormControl";
 import Select from "@material-ui/core/Select";
+import { CircularProgress } from "@material-ui/core";
 
 import Display from "./Display";
+import { UserContext } from "../UserContext";
+
 
 function LocationSearch() {
+  const {user, token} = useContext(UserContext)
   const [selectedLocation, setSelectedLocation] = useState("");
+
   const [locations, setLocations] = useState([]);
   const [images, setImages] = useState([]);
   const [pageIndex, setPageIndex] = useState(0);
+
+  const [loading, setLoading] = useState(false);
 
   const useStyles = makeStyles((theme) => ({
     formControl: {
@@ -23,18 +30,23 @@ function LocationSearch() {
     selectEmpty: {
       marginTop: theme.spacing(2),
     },
+    alignment: {
+      alignItems: "center",
+    },
   }));
 
   const classes = useStyles();
 
-  const Search = () => {
-    const API_URL = "http://127.0.0.1:8000/test/locationsearch/";
-    axios
+  const Search = async () => {
+    const API_URL = "http://127.0.0.1:8000/api/locationsearch/";
+    await axios
       .get(API_URL, {
         params: {
           location: selectedLocation,
           page: pageIndex + 1,
+          user: user
         },
+        headers : {Authorization : "token "+token}
       })
       .then(function (response) {
         console.log(response);
@@ -64,7 +76,7 @@ function LocationSearch() {
     return (
       <React.Fragment>
         <div className="container">
-          {images.length > 0 && (
+          {images.length > 0 ? (
             <>
               <Display results={images} />
               <div className="container center">
@@ -89,6 +101,19 @@ function LocationSearch() {
                 }
               </div>
             </>
+          ) : (
+            <>
+              {loading ? (
+                <>
+                  {" "}
+                  <div className="container center">
+                    <CircularProgress loading color="secondary" />
+                  </div>
+                </>
+              ) : (
+                <></>
+              )}
+            </>
           )}
         </div>
       </React.Fragment>
@@ -97,8 +122,9 @@ function LocationSearch() {
 
   useEffect(() => {
     // Update the document title using the browser API
+    const API_URL = "http://localhost:8000/api/populate/"
     axios
-      .get("http://localhost:8000/test/populate/")
+      .get(API_URL, {headers : {Authorization : "token "+token}})
       .then((response) => {
         console.log(response.data);
         setLocations(response.data.results);
@@ -111,6 +137,7 @@ function LocationSearch() {
   useEffect(() => {
     if (pageIndex || selectedLocation) {
       Search();
+      setLoading(true);
       displayImages();
     }
   }, [pageIndex, selectedLocation]);

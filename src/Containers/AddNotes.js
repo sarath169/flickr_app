@@ -1,26 +1,32 @@
-import React, { useState } from "react";
-import { useParams } from "react-router-dom";
-import axios from "axios";
+import React, { useContext, useState } from "react";
 
-function AddNotes() {
-  const { id } = useParams();
+import axios from "axios";
+import Modal from '../Components/Modal';
+import { UserContext } from "../UserContext";
+
+function AddNotes(props) {
+  const {user, token} = useContext(UserContext)
   const [text, setText] = useState("");
-  console.log(id)
+  const [open, setOpen] = useState(false);
+  console.log(props.id)
   const addNote = (event) => {
     event.preventDefault();
-    const API_URL = "http://127.0.0.1:8000/test/addnote/";
-
+    const API_URL = "http://127.0.0.1:8000/api/addnote/";
+    console.log("enytered")
     axios
       .post(API_URL, {
-        image_id: id,
+        user : user,
+        image: props.id,
         text: text,
-      })
+        
+      },{headers : {Authorization : "token "+token}})
       .then(function (response) {
         console.log(response);
       })
       .catch(function (error) {
         console.log(error);
       });
+      props.onSubmitClose()
       
   };
 
@@ -46,14 +52,7 @@ function AddNotes() {
             <a className="waves-effect waves-light btn" onClick={addNote} >
               Submit
             </a>
-            
-            <a className="waves-effect waves-light btn" href = {"/notes/"+id} >
-              ViewNotes
-            </a>
-            
-
             </div>
-
           </div>
         </form>
       </div>
